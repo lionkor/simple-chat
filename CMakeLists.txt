@@ -1,5 +1,5 @@
 project(simple-chat-common)
-add_library(${CMAKE_PROJECT_NAME} STATIC common.c)
+add_library(${CMAKE_PROJECT_NAME} STATIC common.c c-vector/Vector.c)
 
 project(simple-chat-server)
 add_executable(${CMAKE_PROJECT_NAME} server.c)
