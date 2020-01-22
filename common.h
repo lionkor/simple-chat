@@ -37,6 +37,11 @@ static const unsigned int IDENTIFY_ANSWER_OK[] = {
     ACK, ID, EOT
 };
 
+typedef struct message {
+    size_t user_id;
+    char   text[MAXLINE - sizeof(size_t)];
+} message_t;
+
 void print_version();
 
 typedef struct String {

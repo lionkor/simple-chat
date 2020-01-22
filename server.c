@@ -137,8 +137,8 @@ void* connection_thread(void* data) {
     read(conn->fd, id_response, sizeof(IDENTIFY_ANSWER_OK));
     printf("received %x%x%x as id_response\n", id_response[0],
         id_response[1], id_response[2]);
+    size_t user_id = get_new_user_id();
     if (memcmp(id_response, IDENTIFY_ANSWER_OK, sizeof(IDENTIFY_ANSWER_OK)) == 0) {
-        size_t user_id = get_new_user_id();
         // 3. give user their user_id
         send_message_raw(conn->fd, &user_id, sizeof(user_id));
         char user_id_response = 0; // either ACK or NAK
@@ -156,9 +156,14 @@ void* connection_thread(void* data) {
     // the user_id to be valid
 
     while (connection_ok && send(conn->fd, NULL, 0, MSG_NOSIGNAL) != -1) {
-        read(conn->fd, buf->chars, buf->len);
-        printf("[%10lu] received: %s\n", clock(), buf->chars);
-        if (string_equals(buf, "ping")) {
+        message_t msg;
+        read(conn->fd, &msg, sizeof(message_t));
+        if (msg.user_id != user_id) {
+            printf("user_id mismatch!\n");
+            break;
+        }
+        printf("[%10lu] received from %lu: %s\n", clock(), msg.user_id, msg.text);
+        if (strcmp(msg.text, "ping") == 0) {
             pong(conn);
         } else {
             String* msg = string_create("???");

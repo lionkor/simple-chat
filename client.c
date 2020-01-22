@@ -74,19 +74,31 @@ int main() {
 
 
     // READ / WRITE HERE
-    String* msg      = string_create_empty(MAXLINE);
+    String* msg_str  = string_create_empty(MAXLINE);
     String* response = string_create_empty(MAXLINE);
     for (;;) {
-        string_readline(msg);
-        send(conn_fd, msg->chars, msg->len, 0);
-        printf("[%10lu] sent    : %s\n", clock(), msg->chars);
+        printf("[%lu] > ", user_id);
+        string_readline(msg_str);
+
+        message_t msg;
+        msg.user_id = user_id;
+        if (strlen(msg_str->chars) > sizeof(msg.text)) {
+            printf("message too long!\n");
+        }
+
+        strncpy(msg.text, msg_str->chars, msg_str->len);
+
+        send_message_raw(conn_fd, &msg, sizeof(message_t));
         read(conn_fd, response->chars, response->len);
-        printf("[%10lu] received: %s\n", clock(), response->chars);
+        char c = ACK;
+        if (memcmp(response->chars, &c, sizeof(c)) != 0) {
+            printf("[%10lu] received: %s\n", clock(), response->chars);
+        }
         // clear response buffer
-        string_clear(msg);
+        string_clear(msg_str);
         string_clear(response);
     }
-    string_free(msg);
+    string_free(msg_str);
     string_free(response);
 
     ret = shutdown(conn_fd, SHUT_RDWR);
