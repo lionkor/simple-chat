@@ -51,6 +51,28 @@ int main() {
         return -1;
     }
 
+    size_t user_id = 0;
+    // begin custom user_id handshake
+    // (see serverside equivalent for details)
+    // expect REQ_IDENTIFY
+    unsigned int id_req[sizeof(REQ_IDENTIFY)];
+    read(conn_fd, id_req, sizeof(REQ_IDENTIFY));
+    if (memcmp(id_req, REQ_IDENTIFY, sizeof(REQ_IDENTIFY)) != 0) {
+        printf("did not receive REQ_IDENTIFY\n");
+        return 1;
+    } else {
+        printf("request received\n");
+    }
+    send_message_raw(conn_fd, &IDENTIFY_ANSWER_OK, sizeof(IDENTIFY_ANSWER_OK));
+    printf("sent IDENTIFY_ANSWER_OK\n");
+    read(conn_fd, &user_id, sizeof(user_id));
+    printf("received user id: %lu\n", user_id);
+    unsigned char id_response = ACK;
+    send_message_raw(conn_fd, &id_response, sizeof(unsigned char));
+    printf("responded with ACK\n");
+    // end custom user_id handshake
+
+
     // READ / WRITE HERE
     String* msg      = string_create_empty(MAXLINE);
     String* response = string_create_empty(MAXLINE);

@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <time.h>
 
 #include "common.h"
 
@@ -16,6 +18,18 @@ void string_readline(String* str) {
     size_t  size;
     ssize_t n         = getline(&str->chars, &size, stdin) + 1;
     str->chars[n - 2] = 0;
+}
+
+int send_message(int fd, String* msg) {
+    send(fd, msg->chars, msg->len, MSG_NOSIGNAL);
+    printf("[%10lu] sent    : %s\n", clock(), msg->chars);
+    return 0;
+}
+
+int send_message_raw(int fd, const void* data, size_t size) {
+    send(fd, data, size, MSG_NOSIGNAL);
+    printf("[%10lu] sent    : %s\n", clock(), data);
+    return 0;
 }
 
 int /*bool*/ string_equals(String* s, const char* str) {

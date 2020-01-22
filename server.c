@@ -21,6 +21,17 @@ static server_t server = { 0 };
 
 static Vector* conn_vec;
 
+static size_t   user_id_counter       = 1;
+pthread_mutex_t user_id_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+size_t get_new_user_id() {
+    pthread_mutex_lock(&user_id_counter_mutex);
+    size_t ret = user_id_counter;
+    ++user_id_counter;
+    pthread_mutex_unlock(&user_id_counter_mutex);
+    return ret;
+}
+
 int send_message(int fd, String* msg);
 
 void sig_handler(int signo) {
@@ -108,18 +119,43 @@ int server_listen(server_t* server) {
     return 0;
 }
 
-int send_message(int fd, String* msg) {
-    send(fd, msg->chars, msg->len, MSG_NOSIGNAL);
-    printf("[%10lu] sent    : %s\n", clock(), msg->chars);
-    return 0;
-}
 
 void* connection_thread(void* data) {
     connection_info_t* conn = data;
     printf("client connected\n");
 
     String* buf = string_create_empty(MAXLINE);
-    while (send(conn->fd, NULL, 0, MSG_NOSIGNAL) != -1) {
+
+    bool connection_ok = false;
+
+    // begin custom user_id handshake
+    // 1. send REQ_IDENTIFY to make sure client is ready
+    send_message_raw(conn->fd, REQ_IDENTIFY, sizeof(REQ_IDENTIFY));
+    printf("sent REQ_IDENTIFY\n");
+    unsigned int id_response[sizeof(IDENTIFY_ANSWER_OK)];
+    // 2. receive response to REQ_IDENTIFY, should be IDENTIFY_ANSWER_OK
+    read(conn->fd, id_response, sizeof(IDENTIFY_ANSWER_OK));
+    printf("received %x%x%x as id_response\n", id_response[0],
+        id_response[1], id_response[2]);
+    if (memcmp(id_response, IDENTIFY_ANSWER_OK, sizeof(IDENTIFY_ANSWER_OK)) == 0) {
+        size_t user_id = get_new_user_id();
+        // 3. give user their user_id
+        send_message_raw(conn->fd, &user_id, sizeof(user_id));
+        char user_id_response = 0; // either ACK or NAK
+        // 4. receive response to user_id, should be ACK
+        read(conn->fd, &user_id_response, sizeof(user_id_response));
+        if (user_id_response == ACK)
+            // 4.1. ACK received, user_id accepted
+            connection_ok = true;
+        // 5. handshake is over, connection_ok is now set according to
+        // the success state of the handshake
+    }
+    // end custom user_id handshake
+
+    // further communication from this client needs to be prefaced with
+    // the user_id to be valid
+
+    while (connection_ok && send(conn->fd, NULL, 0, MSG_NOSIGNAL) != -1) {
         read(conn->fd, buf->chars, buf->len);
         printf("[%10lu] received: %s\n", clock(), buf->chars);
         if (string_equals(buf, "ping")) {
