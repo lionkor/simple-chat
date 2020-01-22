@@ -16,10 +16,12 @@ typedef struct String {
     size_t len;
 } String;
 
-String* string_create(const char* str, size_t len);
-String* string_create_empty(size_t buffer_size);
-void    string_readline(String* str);
-void    string_free(String* str);
+String*      string_create(const char* str);
+String*      string_create_empty(size_t buffer_size);
+void         string_readline(String* str);
+void         string_clear(String* str);
+int /*bool*/ string_equals(String* s, const char* str);
+void         string_free(String* str);
 
 #include "c-vector/Vector.h"
 

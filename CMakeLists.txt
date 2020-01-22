@@ -1,9 +1,11 @@
+cmake_minimum_required(VERSION 3.15)
+
 project(simple-chat-common)
 add_library(${CMAKE_PROJECT_NAME} STATIC common.c c-vector/Vector.c)
 
 project(simple-chat-server)
 add_executable(${CMAKE_PROJECT_NAME} server.c)
-target_link_libraries(${CMAKE_PROJECT_NAME} simple-chat-common)
+target_link_libraries(${CMAKE_PROJECT_NAME} simple-chat-common pthread)
 
 project(simple-chat-client)
 add_executable(${CMAKE_PROJECT_NAME} client.c)

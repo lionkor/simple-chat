@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 #include <netinet/in.h>
+#include <time.h>
 
 #include "common.h"
 
@@ -51,6 +52,20 @@ int main() {
     }
 
     // READ / WRITE HERE
+    String* msg      = string_create_empty(MAXLINE);
+    String* response = string_create_empty(MAXLINE);
+    for (;;) {
+        string_readline(msg);
+        send(conn_fd, msg->chars, msg->len, 0);
+        printf("[%10lu] sent    : %s\n", clock(), msg->chars);
+        read(conn_fd, response->chars, response->len);
+        printf("[%10lu] received: %s\n", clock(), response->chars);
+        // clear response buffer
+        string_clear(msg);
+        string_clear(response);
+    }
+    string_free(msg);
+    string_free(response);
 
     ret = shutdown(conn_fd, SHUT_RDWR);
     if (ret == -1) {

@@ -18,7 +18,16 @@ void string_readline(String* str) {
     str->chars[n - 2] = 0;
 }
 
-String* string_create(const char* str, size_t len) {
+int /*bool*/ string_equals(String* s, const char* str) {
+    return strcmp(s->chars, str) == 0;
+}
+
+void string_clear(String* str) {
+    memset(str->chars, '\0', str->len);
+}
+
+String* string_create(const char* str) {
+    size_t  len        = strlen(str);
     String* new_string = (String*)malloc(sizeof(String));
     assert(new_string != NULL);
     new_string->chars = calloc(len, sizeof(char));
