@@ -128,6 +128,7 @@ void* connection_thread(void* data) {
 
     bool connection_ok = false;
 
+    /*
     // begin custom user_id handshake
     // 1. send REQ_IDENTIFY to make sure client is ready
     send_message_raw(conn->fd, REQ_IDENTIFY, sizeof(REQ_IDENTIFY));
@@ -154,14 +155,17 @@ void* connection_thread(void* data) {
 
     // further communication from this client needs to be prefaced with
     // the user_id to be valid
+    */
 
     while (connection_ok && send(conn->fd, NULL, 0, MSG_NOSIGNAL) != -1) {
         message_t msg;
         read(conn->fd, &msg, sizeof(message_t));
+        /*
         if (msg.user_id != user_id) {
             printf("user_id mismatch!\n");
             break;
         }
+        */
         printf("[%10lu] received from %lu: %s\n", clock(), msg.user_id, msg.text);
         if (strcmp(msg.text, "ping") == 0) {
             pong(conn);

@@ -52,6 +52,7 @@ int main() {
     }
 
     size_t user_id = 0;
+    /*
     // begin custom user_id handshake
     // (see serverside equivalent for details)
     // expect REQ_IDENTIFY
@@ -71,6 +72,7 @@ int main() {
     send_message_raw(conn_fd, &id_response, sizeof(unsigned char));
     printf("responded with ACK\n");
     // end custom user_id handshake
+    */
 
 
     // READ / WRITE HERE
